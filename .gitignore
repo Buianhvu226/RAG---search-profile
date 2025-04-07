@@ -1,0 +1,33 @@
+# Virtual Environment
+env/
+venv/
+ENV/
+.env/
+.venv/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# VS Code settings
+.vscode/
+
+# PyCharm settings
+.idea/
+
+# Large data files
+*.csv
+*.xlsx
+*.xls
+
+# Logs
+*.log

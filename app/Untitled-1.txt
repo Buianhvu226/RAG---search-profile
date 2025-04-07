@@ -1,0 +1,12 @@
+f:\missing_people(NCHCCCL)
+├── data/
+│   ├── profiles_detailed_data_cleaned.csv
+│   └── processed_data.parquet
+├── embeddings/
+│   └── embeddings.pkl
+├── app/
+│   ├── main.py
+│   ├── search.py
+│   └── utils.py
+├── requirements.txt
+└── README.md
