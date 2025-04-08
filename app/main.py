@@ -11,8 +11,8 @@ from search import VectorSearcher
 import os
 import re
 
-DATA_PATH = r"f:\missing_people(NCHCCCL)\data\profiles_detailed_data_cleaned.csv"
-EMBEDDINGS_PATH = r"f:\missing_people(NCHCCCL)\embeddings\embeddings.pkl"
+DATA_PATH = r"c:\Capstone Project\RAG---search-profile\dataset\profiles_detailed_data_cleaned.csv"
+EMBEDDINGS_PATH = r"c:\Capstone Project\RAG---search-profile\embeddings\embeddings.pkl"
 
 def initialize_system():
     df = load_data(DATA_PATH)
