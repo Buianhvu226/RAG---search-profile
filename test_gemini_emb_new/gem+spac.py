@@ -64,6 +64,7 @@ Chi tiết: {detail}
     prompt = f"""Bạn là 1 nhà phân tích hồ sơ rất chuyên nghiệp. Hãy phân tích các hồ sơ đăng ký tìm người thân thất lạc sau đây và xác định xem có khớp với yêu cầu tìm kiếm không.
     Hãy so sánh các tên riêng, địa danh, năm sinh, địa chỉ, đặc điểm nhận dạng, ký ức hoặc các thông tin khác để xác định sự khớp.
     Mỗi hồ sơ có Index gốc, Tiêu đề, Họ tên và Chi tiết. Trả về danh sách các Index gốc của hồ sơ phù hợp.
+    *Lưu ý: Những hồ sơ nào có những tên riêng không hề khớp với yêu cầu tìm kiếm thì không cần phân tích. (Hồ sơ không phù hợp)
 
     Yêu cầu tìm kiếm: {query}
 
@@ -94,7 +95,7 @@ Chi tiết: {detail}
     
     return []
 
-def parallel_verify(query, ranked_profiles, max_profiles=200):
+def parallel_verify(query, ranked_profiles, max_profiles=300):
     """Perform parallel verification of profiles using multiple API keys."""
     from concurrent.futures import ThreadPoolExecutor
     
@@ -176,19 +177,21 @@ def get_embedding(text, task_type, retry_count=3, model="text-embedding-004"):
 # --- Hàm trích xuất từ khóa từ truy vấn bằng Gemini ---
 def extract_keywords_gemini(query, model="gemini-2.0-flash"):
     """Trích xuất các từ khóa quan trọng từ truy vấn bằng Gemini (có ví dụ)."""
-    prompt = f"""Phân tích các hồ sơ tìm kiếm người thân thất lạc sau và trích xuất các từ khóa quan trọng có thể dùng để tìm kiếm thông tin liên quan đến người mất tích. Trả về một danh sách các từ khóa. Lưu ý tên riêng có thể phân tích nhỏ hơn thành tên riêng hoặc họ.
+    prompt = f"""Phân tích các hồ sơ tìm kiếm người thân thất lạc sau và trích xuất các từ khóa quan trọng có thể dùng để tìm kiếm thông tin liên quan đến người mất tích. Trả về một danh sách các từ khóa và những từ có khả năng liên quan. Lưu ý tên riêng có thể phân tích nhỏ hơn thành tên riêng (ví dụ: Lê Thị Hạnh => Hạnh). Từ khóa liên quan có thể được sinh ra từ các từ khóa chính (ví dụ: chiến tranh => xung đột, chạy giặc, vượt biên, di cư,...) hoặc từ các từ khóa khác trong đoạn văn bản. Vậy nhiệm vụ của bạn là trích xuất các từ khóa quan trọng nhất có thể dùng để tìm kiếm thông tin liên quan đến người mất tích và các từ khóa liên quan có thể sinh ra từ các từ khóa chính. Các từ khóa này có thể là tên riêng, địa danh, năm sinh, địa chỉ, đặc điểm nhận dạng, ký ức hoặc các thông tin khác... . Hãy trả về danh sách các từ khóa và các từ khóa liên quan có thể sinh ra từ các từ khóa chính.
 
 Ví dụ 1:
 Đoạn văn bản: Chị Lê Thị Mỹ Duyên tìm bác Lê Viết Thi, đi vượt biên mất liên lạc khoảng năm 1978. Ông Lê Viết Thi sinh năm 1946, quê Quảng Nam. Bố mẹ là cụ Lê Viết Y và cụ Nguyễn Thị Ca. Anh chị em trong gia đình là Viết, Thơ, Dũng, Chung, Mười, Sỹ và Tượng. Khoảng năm 1978, ông Lê Viết Thi đi vượt biên. Từ đó, gia đình không còn nghe tin tức gì về ông.
-Các từ khóa quan trọng: Lê Thị Mỹ Duyên, Duyên, Lê Viết Thi, Thi, vượt biên, 1978, 1946, Quảng Nam, Lê Viết Y, Y Nguyễn Thị Ca, Ca, Viết, Thơ, Dũng, Chung, Mười, Sỹ và Tượng
+Các từ khóa quan trọng: Lê Thị Mỹ Duyên, Duyên, Lê Viết Thi, Thi, vượt biên, di cư, chiến tranh, chạy giặc, 1978, 1946, Quảng Nam, Lê Viết Y, Y Nguyễn Thị Ca, Ca, Viết, Thơ, Dũng, Chung, Mười, Sỹ, Tượng
 
 Ví dụ 2:
 Đoạn văn bản: Chị Lê Thị Toàn tìm anh Lê Văn Thương, mất liên lạc năm 1984 tại ga Đông Hà, Quảng Trị. Vào năm 1984, gia đình ông Tiên và bà Tẻo từ Thanh Hóa di chuyển vào Quảng Trị. Khi đến ga Đông Hà (Quảng Trị), vì hoàn cảnh quá khó khăn, ông Tiên bị tật ở chân, còn bà Tẻo không minh mẫn nên bà Tèo đã mang con trai Lê Văn Thương vừa mới sinh cho một người phụ nữ ở ga Đông Hà. Người phụ nữ đó có cho bà Tẻo một ít tiền rồi ôm anh Thương đi mất.
-Các từ khóa quan trọng: Lê Thị Toàn, Toàn, Lê Văn Thương, Thương, 1984, Đông Hà, Quảng Trị, Tiên, Tẻo, Thanh Hóa, Quảng Trị, khó khăn, tật, không minh mẫn, mới sinh
+Các từ khóa quan trọng: Lê Thị Toàn, Toàn, Lê Văn Thương, Thương, 1984, Đông Hà, Quảng Trị, Tiên, Tẻo, Thanh Hóa, Quảng Trị, di chuyển, di cư, khó khăn, thiếu thốn, nghèo khổ, tật, khiếm khuyết, không minh mẫn, thần kinh, tâm thần, mới sinh, sơ sinh, mới đẻ.
 
 Ví dụ 3:
 Đoạn văn bản: Chị Nguyễn Thị Yến tìm ba Nguyễn Văn Đã mất liên lạc năm 1977. Ông Nguyễn Văn Đã, sinh năm 1939, không rõ quê quán. Khoảng năm 1970, bà Vũ Thị Hải gặp ông Nguyễn Văn Đã ở nông trường Sao Đỏ tại Mộc Châu, Sơn La. Ông Đã phụ trách lái xe lương thực cho nông trường. Sau khi sinh chị Yến, ông muốn đưa hai mẹ con về quê ông nhưng bà Hải biết ông Đã đã có vợ ở quê nên không đồng ý và đem con về khu tập thể nhà máy nước Nam Định. Ông Đã vẫn thường lái xe về thăm con gái. Năm 1979, bà Hải mang con về quê bà sinh sống, từ đó chị Yến không hay tin gì về ba nữa.
-Các từ khóa quan trọng: Nguyễn Thị Yến, Yến, Nguyễn Văn Đã, Đã, 1977, 1939, 1970, Vũ Thị Hải, Hải, nông trường, Sao Đỏ, Mộc Châu, Sơn La, lái xe, lương thực, nông trường, khu tập thể, nhà máy nước, Nam Định, 1979
+Các từ khóa quan trọng: Nguyễn Thị Yến, Yến, Nguyễn Văn Đã, Đã, 1977, 1939, 1970, Vũ Thị Hải, Hải, nông trường, Sao Đỏ, Mộc Châu, Sơn La, lái xe, lương thực, nông trường, làm nông, nông nghiệp, khu tập thể, nhà máy nước, Nam Định, 1979
+
+*Chú ý: những từ khóa nào phổ biến, phổ thông quá thì bỏ qua như: gia đình, anh, em, vợ, chồng, tìm kiếm, thất lạc, mất tích, mất liên lạc, không rõ quê quán, không rõ địa chỉ, không rõ thông tin, không rõ năm sinh, không rõ đặc điểm nhận dạng, không rõ ký ức...
 
 Đoạn văn bản hiện tại:
 {query}
@@ -305,7 +308,7 @@ def main():
     test_search_combined(df, embeddings_matrix, original_indices)
 
 # --- Hàm Tìm kiếm kết hợp khớp từ khóa và vector search ---
-def test_search_combined(df_original, embeddings_matrix, original_indices, top_n_default=200):
+def test_search_combined(df_original, embeddings_matrix, original_indices, top_n_default=300):
     """Thực hiện tìm kiếm kết hợp khớp từ khóa và vector search."""
     print("\n--- Bắt đầu Thử nghiệm Tìm kiếm (Kết hợp Từ Khóa và Vector) ---")
     print(f"Sẵn sàng tìm kiếm trên {len(embeddings_matrix)} hồ sơ đã được mã hóa.")
@@ -320,13 +323,18 @@ def test_search_combined(df_original, embeddings_matrix, original_indices, top_n
 
         # 1. Tìm kiếm các hồ sơ chứa ít nhất một từ khóa
         keyword_match_indices = set()
+        keyword_match_counts = {}  # <--- Thêm dòng này
         if keywords:
             for keyword in keywords:
                 for col in df_original.columns:
                     if df_original[col].dtype == object:
                         try:
                             matches = df_original[col].str.contains(keyword, case=False, na=False)
-                            keyword_match_indices.update(df_original[matches].index)
+                            matched_indices = df_original[matches].index
+                            keyword_match_indices.update(matched_indices)
+                            # Đếm số lượng từ khóa khớp cho từng hồ sơ
+                            for idx in matched_indices:
+                                keyword_match_counts[idx] = keyword_match_counts.get(idx, 0) + 1
                         except:
                             continue
 
@@ -336,6 +344,7 @@ def test_search_combined(df_original, embeddings_matrix, original_indices, top_n
         if not valid_keyword_indices:
             print("\nKhông tìm thấy hồ sơ nào khớp với từ khóa. Sẽ tìm kiếm bằng vector search trên toàn bộ dữ liệu.")
             search_indices = df_original.index
+            keyword_match_counts = {idx: 0 for idx in search_indices}  # Không có khớp từ khóa
         else:
             print(f"\nTìm thấy {len(valid_keyword_indices)} hồ sơ khớp với ít nhất một từ khóa. Sẽ thực hiện vector search trên các hồ sơ này.")
             search_indices = valid_keyword_indices
@@ -360,31 +369,35 @@ def test_search_combined(df_original, embeddings_matrix, original_indices, top_n
 
             similarities = cosine_similarity(query_embedding_np, search_embeddings)[0]
 
-            # Tạo kết quả xếp hạng
+            # Tạo kết quả xếp hạng, cộng điểm thưởng cho số từ khóa khớp
+            KEYWORD_BONUS = 0.15  # Hệ số điểm thưởng cho mỗi từ khóa khớp (có thể điều chỉnh)
             ranked_results = []
             for i, similarity in enumerate(similarities):
                 original_df_index = search_original_indices[i]
                 profile = df_original.loc[original_df_index]
-                ranked_results.append((similarity, profile))
+                match_count = keyword_match_counts.get(original_df_index, 0)
+                # Tính tổng điểm: similarity + điểm thưởng
+                total_score = similarity + match_count * KEYWORD_BONUS
+                ranked_results.append((match_count, similarity, total_score, profile))
 
-            # Sắp xếp theo độ tương đồng giảm dần
-            ranked_results.sort(key=lambda item: -item[0])
+            # Sắp xếp: tổng điểm giảm dần, nếu bằng nhau thì số từ khóa khớp giảm dần, rồi similarity giảm dần
+            ranked_results.sort(key=lambda item: (-item[2], -item[0], -item[1]))
 
             print(f"\n--- Top {top_n_default} Kết quả Tìm kiếm Vector ---")
             count = 0
-            for score, profile in ranked_results[:top_n_default]:
+            for match_count, similarity, total_score, profile in ranked_results[:top_n_default]:
                 original_df_index = profile.name
-                print(f"  Độ tương đồng: {score:.4f}, Index gốc: {original_df_index}, Tiêu đề: {profile.get('Tiêu đề', 'N/A')}, Họ và tên: {profile.get('Họ và tên', 'N/A')}")
+                print(f"  Tổng điểm: {total_score:.4f} | Số từ khóa khớp: {match_count} | Độ tương đồng: {similarity:.4f} | Index gốc: {original_df_index} | Tiêu đề: {profile.get('Tiêu đề', 'N/A')} | Họ và tên: {profile.get('Họ và tên', 'N/A')}")
                 count += 1
-                if count >= 10:  # Chỉ hiển thị 10 kết quả đầu tiên để không làm rối màn hình
+                if count >= 10:
                     print(f"  ... và {min(top_n_default - 10, len(ranked_results) - 10)} kết quả khác")
                     break
-            
+
             # 3. Lọc kết quả bằng LLM
             print("\nĐang xác minh kết quả với Gemini LLM...")
-            top_profiles = [profile for _, profile in ranked_results[:top_n_default]]
+            top_profiles = [profile for _, _, _, profile in ranked_results[:top_n_default]]
             verified_indices = parallel_verify(user_query, top_profiles, max_profiles=top_n_default)
-            
+
             if verified_indices:
                 print(f"\n=== {len(verified_indices)} KẾT QUẢ PHÙ HỢP NHẤT SAU KHI LỌC BẰNG LLM ===")
                 for idx in verified_indices:
