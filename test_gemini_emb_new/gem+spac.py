@@ -35,7 +35,7 @@ BATCH_SIZE = 3  # Tăng từ 2 lên 3 hồ sơ mỗi batch
 MAX_CONCURRENT_REQUESTS = 6  # Tăng lên 6 để sử dụng tất cả các API key
 MAX_RETRIES = 5  # Maximum number of retries for API calls
 INITIAL_RETRY_DELAY = 5  # Increased from 2 to 5 seconds initial delay
-BATCH_GROUP_DELAY = 3  # Giảm từ 30 xuống 5 giây giữa các nhóm batch
+BATCH_GROUP_DELAY = 3  # 3 giây giữa các nhóm batch
 
 # --- Khởi tạo Google AI ---
 try:
@@ -64,7 +64,7 @@ Chi tiết: {detail}
     prompt = f"""Bạn là 1 nhà phân tích hồ sơ rất chuyên nghiệp. Hãy phân tích các hồ sơ đăng ký tìm người thân thất lạc sau đây và xác định xem có khớp với yêu cầu tìm kiếm không.
     Hãy so sánh các tên riêng, địa danh, năm sinh, địa chỉ, đặc điểm nhận dạng, ký ức hoặc các thông tin khác để xác định sự khớp.
     Mỗi hồ sơ có Index gốc, Tiêu đề, Họ tên và Chi tiết. Trả về danh sách các Index gốc của hồ sơ phù hợp.
-    *Lưu ý: Những hồ sơ nào có những tên riêng không hề khớp với yêu cầu tìm kiếm thì không cần phân tích. (Hồ sơ không phù hợp)
+    *Lưu ý: Những hồ sơ nào có những tên riêng hoặc danh từ riêng không hề khớp với yêu cầu tìm kiếm thì không cần phân tích (Hồ sơ không phù hợp). Hãy kiểm tra thật kỹ !
 
     Yêu cầu tìm kiếm: {query}
 
@@ -72,7 +72,7 @@ Chi tiết: {detail}
     {"-"*40}
     {"".join(profile_strings)}
 
-    Hãy trả về chỉ các Index gốc của hồ sơ phù hợp nhất, mỗi index trên một dòng. Nếu không có hồ sơ nào phù hợp, trả về 'none'. Chỉ trả về hồ sơ nào thật sự phù hợp nhất.
+    Hãy trả về chỉ các Index gốc của hồ sơ phù hợp nhất, mỗi index trên một dòng. Nếu không có hồ sơ nào phù hợp, trả về 'none'. Chỉ trả về hồ sơ nào thật sự phù hợp nhất !
     """
     
     for attempt in range(MAX_RETRIES):
