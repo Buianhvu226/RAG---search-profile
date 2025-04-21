@@ -1,7 +1,7 @@
 # Hệ thống hỗ trợ tìm kiếm người thân thất lạc bằng Vector Search
 
 import pandas as pd
-import torch
+# import torch
 from sentence_transformers import SentenceTransformer, util
 import faiss
 import google.generativeai as genai
@@ -13,7 +13,9 @@ genai.configure(api_key=GOOGLE_API_KEY)
 
 # 1. Đọc dữ liệu CSV
 # F:\missing_people(NCHCCCL)\data\processed_missing_persons.csv
-df = pd.read_csv("F:\missing_people(NCHCCCL)\data\processed_missing_persons.csv")
+df = pd.read_csv("F:\missing_people(NCHCCCL)\data\processed_missing_persons.csv" \
+"" \
+"")
 
 # 2. Chọn các cột cần thiết
 columns = [
